@@ -23,6 +23,8 @@ module SmartAnswer::Calculators
       },
     }
 
+    INTEREST_RATE_CHANGE_2016_DATE = Date.new(2016, 8, 23)
+
     def start_of_next_tax_year
       if tax_year == '2012-13'
         Date.new(2013, 4, 6)
@@ -155,9 +157,15 @@ module SmartAnswer::Calculators
       DEADLINES[:payment_deadline][tax_year.to_sym]
     end
 
-    #interest is 3% per annum
+    # interest is calculated at 3% per annum before 22 August 2016, 2.75% after that
     def calculate_interest(amount, number_of_days)
-      (amount * (0.03 / 365) * (number_of_days - 1)).round(10)
+      if payment_date <= INTEREST_RATE_CHANGE_2016_DATE
+        interest_amount = (amount * (0.03 / 365) * (number_of_days - 1)).round(10)
+      else
+        interest_amount = (amount * (0.03 / 365) * ((INTEREST_RATE_CHANGE_2016_DATE - payment_deadline).to_i - 1)).round(10) +
+          (amount * (0.0275 / 365) * ((payment_date - INTEREST_RATE_CHANGE_2016_DATE).to_i - 1)).round(10)
+      end
+      interest_amount
     end
   end
 end

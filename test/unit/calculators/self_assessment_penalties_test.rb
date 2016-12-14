@@ -157,7 +157,7 @@ module SmartAnswer::Calculators
           @calculator.estimated_bill = SmartAnswer::Money.new(10000)
           @calculator.payment_date = Date.parse("2014-01-01")
           assert_equal 0, @calculator.interest
-          # 1 day after the deadling
+          # 1 day after the deadline
           @calculator.payment_date = Date.parse("2014-02-01")
           assert_equal 0, @calculator.interest
           # 31 days after the deadline
@@ -225,6 +225,25 @@ module SmartAnswer::Calculators
         end
         should "confirm payment was made late" do
           refute @calculator.paid_on_time?
+        end
+      end
+
+      context "interest calculated at different rates" do
+        context "rate drops from 3% to 2.75% on 23 August 2016" do
+          setup do
+            @calculator.estimated_bill = SmartAnswer::Money.new(10000)
+          end
+
+          should "be more before 22 Aug 2016" do
+            @calculator.tax_year = "2014-15"
+            @calculator.payment_date = Date.parse("2016-08-22")
+            old_rate_interest = @calculator.interest.value.floor
+
+            @calculator.tax_year = "2015-16"
+            @calculator.payment_date = Date.parse("2017-08-22")
+            new_rate_interest = @calculator.interest.value.floor
+            assert old_rate_interest > new_rate_interest
+          end
         end
       end
     end
